@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>车险市场信息收集平台</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.4.21/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: #f0f2f5;
+      color: #1a1a2e;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+      color: #fff;
+      padding: 18px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .header h1 {
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    .header .user-info {
+      font-size: 14px;
+      opacity: 0.85;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ff6b6b;
+      display: inline-block;
+    }
+
+    .live-dot.on {
+      background: #2ecc71;
+      box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7);
+      animation: pulse 1.6s infinite;
+    }
+
+    @keyframes pulse {
+      70% {
+        box-shadow: 0 0 0 8px rgba(46, 204, 113, 0);
+      }
+
+      100% {
+        box-shadow: 0 0 0 0 rgba(46, 204, 113, 0);
+      }
+    }
+
+    .tabs {
+      background: #fff;
+      padding: 0 32px;
+      display: flex;
+      gap: 4px;
+      border-bottom: 1px solid #e8e8e8;
+    }
+
+    .tabs button {
+      padding: 14px 24px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 15px;
+      color: #666;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .tabs button.active {
+      color: #0f3460;
+      border-bottom-color: #0f3460;
+      font-weight: 600;
+    }
+
+    .tabs button:hover {
+      color: #0f3460;
+    }
+
+    .container {
+      padding: 28px 32px;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .overview-cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      margin-bottom: 28px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 22px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    .card .label {
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 8px;
+    }
+
+    .card .value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #0f3460;
+    }
+
+    .card .sub {
+      font-size: 12px;
+      color: #aaa;
+      margin-top: 4px;
+    }
+
+    .chart-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .chart-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .chart-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 22px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    .chart-card h3 {
+      font-size: 15px;
+      color: #333;
+      margin-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .chart-card h3 select {
+      padding: 4px 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+
+    .chart {
+      width: 100%;
+      height: 320px;
+    }
+
+    .chart-lg {
+      width: 100%;
+      height: 360px;
+    }
+
+    .filter-bar {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px 22px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .filter-bar label {
+      font-size: 14px;
+      color: #555;
+    }
+
+    .filter-bar select,
+    .filter-bar input {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .filter-bar button,
+    .btn {
+      padding: 8px 20px;
+      background: #0f3460;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .filter-bar button:hover,
+    .btn:hover {
+      background: #16213e;
+    }
+
+    .btn-sm {
+      padding: 5px 12px;
+      font-size: 12px;
+    }
+
+    .btn-ghost {
+      background: #eef0f6;
+      color: #0f3460;
+    }
+
+    .btn-ghost:hover {
+      background: #dde2ee;
+    }
+
+    .upload-area,
+    .panel {
+      background: #fff;
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+      margin-bottom: 20px;
+    }
+
+    .drop-zone {
+      border: 2px dashed #0f3460;
+      border-radius: 10px;
+      padding: 50px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #f8f9ff;
+    }
+
+    .drop-zone:hover,
+    .drop-zone.dragover {
+      background: #eef0ff;
+      border-color: #3a7bd5;
+    }
+
+    .drop-zone p {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .drop-zone .icon {
+      font-size: 42px;
+      color: #0f3460;
+      margin-bottom: 10px;
+    }
+
+    .result-panel {
+      margin-top: 24px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .result-panel .section {
+      background: #f8f9ff;
+      border-radius: 10px;
+      padding: 18px;
+    }
+
+    .result-panel h4 {
+      font-size: 14px;
+      color: #0f3460;
+      margin-bottom: 12px;
+    }
+
+    .result-panel table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .result-panel td {
+      padding: 8px 10px;
+      border-bottom: 1px solid #e8e8e8;
+      font-size: 13px;
+    }
+
+    .result-panel td:first-child {
+      color: #888;
+      width: 38%;
+    }
+
+    .result-panel textarea {
+      width: 100%;
+      height: 260px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 12px;
+    }
+
+    .result-panel img {
+      max-width: 100%;
+      border-radius: 8px;
+      border: 1px solid #e0e4ee;
+    }
+
+    .warn-box {
+      background: #fff8e6;
+      border: 1px solid #f5d98b;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+    }
+
+    .warn-box h4 {
+      color: #9a6b00;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .warn-box ul {
+      margin-left: 18px;
+    }
+
+    .warn-box li {
+      font-size: 12.5px;
+      color: #8a6400;
+      line-height: 1.9;
+    }
+
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    table.data-table th,
+    table.data-table td {
+      padding: 12px 14px;
+      text-align: left;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 13px;
+    }
+
+    table.data-table th {
+      background: #0f3460;
+      color: #fff;
+      font-weight: 500;
+    }
+
+    table.data-table tr:hover {
+      background: #f8f9ff;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+    }
+
+    .tag-ev {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .tag-fuel {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .tag-good {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .tag-warn {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .tag-bad {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .tag-corrected {
+      background: #d6e4ff;
+      color: #1a3d8f;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #888;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    /* 人工修正弹窗 */
+    .modal-mask {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 24, 45, 0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .modal {
+      background: #fff;
+      border-radius: 14px;
+      width: min(920px, 94vw);
+      max-height: 90vh;
+      overflow: auto;
+      padding: 26px 30px;
+    }
+
+    .modal h3 {
+      font-size: 17px;
+      color: #0f3460;
+      margin-bottom: 6px;
+    }
+
+    .modal .hint {
+      font-size: 12.5px;
+      color: #999;
+      margin-bottom: 18px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px 20px;
+    }
+
+    .form-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-item label {
+      font-size: 12.5px;
+      color: #666;
+    }
+
+    .form-item input,
+    .form-item select {
+      padding: 9px 12px;
+      border: 1px solid #d8dded;
+      border-radius: 7px;
+      font-size: 13.5px;
+    }
+
+    .form-item input:focus,
+    .form-item select:focus {
+      outline: none;
+      border-color: #3a7bd5;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 22px;
+    }
+
+    .quality-pill {
+      display: inline-block;
+      background: #eef4ff;
+      color: #1a3d8f;
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    /* 上传确认表单：识别结果可直接编辑后再确认 */
+    .confirm-input {
+      width: 100%;
+      padding: 7px 10px;
+      border: 1px solid #d8dded;
+      border-radius: 6px;
+      font-size: 13px;
+      background: #fff;
+    }
+
+    .confirm-input:focus {
+      outline: none;
+      border-color: #3a7bd5;
+    }
+
+    .confirm-actions {
+      margin-top: 16px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .confirm-actions .hint {
+      font-size: 12px;
+      color: #999;
+    }
+
+    .btn:disabled,
+    .btn-ghost:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+
+    /* 全局操作反馈提示 */
+    .toast {
+      position: fixed;
+      top: 22px;
+      right: 26px;
+      z-index: 200;
+      max-width: 400px;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 13.5px;
+      line-height: 1.6;
+      box-shadow: 0 6px 22px rgba(15, 24, 45, 0.18);
+      animation: toast-in .22s ease-out;
+    }
+
+    .toast-success {
+      background: #ecf9f0;
+      color: #1c7c40;
+      border: 1px solid #b7e3c6;
+    }
+
+    .toast-error {
+      background: #fdeeee;
+      color: #a52121;
+      border: 1px solid #f3c2c2;
+    }
+
+    .toast-info {
+      background: #eef4ff;
+      color: #1a3d8f;
+      border: 1px solid #cfdffb;
+    }
+
+    @keyframes toast-in {
+      from {
+        opacity: 0;
+        transform: translateY(-8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <div class="header">
+      <h1>🚗 车险市场信息收集平台</h1>
+      <div class="user-info">
+        <span class="live-dot" :class="{on: live}"></span>{{ live ? '实时已连接' : '实时断开' }}
+        <template v-if="currentOperator"> ｜ 操作员：{{ currentOperator.username }} ｜ {{ currentOperator.department_name
+          }}</template>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button :class="{active: tab==='dashboard'}" @click="tab='dashboard'">📊 数据看板</button>
+      <button :class="{active: tab==='upload'}" @click="tab='upload'">📤 保单上传</button>
+      <button :class="{active: tab==='policies'}" @click="tab='policies'">📋 保单记录</button>
+    </div>
+
+    <div class="container">
+      <!-- ===================== 数据看板 ===================== -->
+      <div v-if="tab==='dashboard'">
+        <div class="overview-cards">
+          <div class="card">
+            <div class="label">保单总数</div>
+            <div class="value">{{ overview.total }}</div>
+            <div class="sub">累计收集</div>
+          </div>
+          <div class="card">
+            <div class="label">今日新增</div>
+            <div class="value">{{ overview.today_count }}</div>
+            <div class="sub">今日上传量</div>
+          </div>
+          <div class="card">
+            <div class="label">平均识别质量</div>
+            <div class="value">{{ overview.avg_quality_score }}<span style="font-size:16px;color:#888">分</span></div>
+            <div class="sub">字段完整率</div>
+          </div>
+          <div class="card">
+            <div class="label">人工修正数</div>
+            <div class="value">{{ overview.corrected_count }}</div>
+            <div class="sub">已复核保单</div>
+          </div>
+        </div>
+
+        <div class="chart-grid">
+          <div class="chart-card">
+            <h3>📈 上传趋势
+              <span><select v-model="timeDim" @change="loadDashboard()">
+                  <option value="day">日粒度</option>
+                  <option value="week">周粒度</option>
+                </select></span>
+            </h3>
+            <div id="chartTrend" class="chart-lg"></div>
+          </div>
+          <div class="chart-card">
+            <h3>🏢 保险公司市场份额
+              <span><select v-model="reportDim" @change="loadDashboard()">
+                  <option value="day">今日</option>
+                  <option value="week">本周</option>
+                  <option value="month">本月</option>
+                </select></span>
+            </h3>
+            <div id="chartCompany" class="chart-lg"></div>
+          </div>
+        </div>
+
+        <div class="chart-grid-3">
+          <div class="chart-card">
+            <h3>🔌 新能源 vs 燃油车</h3>
+            <div id="chartEV" class="chart"></div>
+          </div>
+          <div class="chart-card">
+            <h3>💰 保费段分布</h3>
+            <div id="chartSegment" class="chart"></div>
+          </div>
+          <div class="chart-card">
+            <h3>🚙 热门车型 TOP10</h3>
+            <div id="chartModel" class="chart"></div>
+          </div>
+        </div>
+
+        <div class="chart-grid">
+          <div class="chart-card">
+            <h3>👥 用户上传量 &amp; 质量分（本周）</h3>
+            <div id="chartUser" class="chart"></div>
+          </div>
+          <div class="chart-card">
+            <h3>🏛️ 部门上传统计（本周）</h3>
+            <div id="chartDept" class="chart"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== 保单上传 ===================== -->
+      <div v-if="tab==='upload'">
+        <div class="upload-area">
+          <h2 style="font-size:18px;margin-bottom:20px;">📤 上传车险保单（图片 / PDF）</h2>
+          <div class="filter-bar">
+            <label>选择操作员：</label>
+            <select v-model="uploadUserId">
+              <option v-for="u in users" :key="u.id" :value="u.id">{{ u.username }} ({{ u.department_name }})</option>
+            </select>
+          </div>
+          <div class="drop-zone" @click="$refs.fileInput.click()" @dragover.prevent="isDragover=true"
+            @dragleave="isDragover=false" @drop.prevent="onDrop($event)" :class="{dragover: isDragover}">
+            <div class="icon">📄</div>
+            <p>点击或拖拽保单文件到此处上传</p>
+            <p style="margin-top:6px;font-size:12px;color:#aaa;">支持 JPG / PNG / PDF，PDF 自动逐页识别</p>
+            <input ref="fileInput" type="file" accept="image/*,application/pdf" hidden @change="onFileChange">
+          </div>
+          <div v-if="uploading" class="loading">⏳ 正在识别中...</div>
+
+          <div v-if="uploadResult" class="result-panel">
+            <div class="section">
+              <h4>📋 请核对识别结果并确认添加　质量分
+                <span class="quality-pill">{{ uploadResult.quality_score }}</span>
+              </h4>
+
+              <div v-if="uploadResult.warnings.length" class="warn-box">
+                <h4>⚠️ 自动校验提示（{{ uploadResult.warnings.length }} 项，建议人工复核）</h4>
+                <ul>
+                  <li v-for="(w, i) in uploadResult.warnings" :key="i">{{ w }}</li>
+                </ul>
+              </div>
+
+              <table>
+                <tr v-for="f in fieldDefs" :key="f.key">
+                  <td>{{ f.label }}</td>
+                  <td>
+                    <select v-if="f.key==='is_new_energy'" class="confirm-input" v-model="confirmForm.is_new_energy">
+                      <option :value="true">新能源</option>
+                      <option :value="false">燃油车</option>
+                    </select>
+                    <input v-else-if="f.type==='number'" class="confirm-input" type="number" step="0.01"
+                      v-model="confirmForm[f.key]" placeholder="未识别，可手工补录">
+                    <input v-else class="confirm-input" type="text" v-model="confirmForm[f.key]"
+                      placeholder="未识别，可手工补录">
+                  </td>
+                </tr>
+              </table>
+
+              <div class="confirm-actions">
+                <button class="btn" :disabled="confirming" @click="confirmAdd">
+                  {{ confirming ? '⏳ 提交中...' : '✅ 确认添加' }}
+                </button>
+                <button class="btn btn-ghost" :disabled="confirming" @click="cancelAdd">🗑 取消</button>
+                <span class="hint">确认后自动写入「保单记录」，并实时同步数据看板</span>
+              </div>
+            </div>
+
+            <div class="section">
+              <h4>📝 OCR 原始文本</h4>
+              <img v-if="uploadResult.image_url" :src="uploadResult.image_url" alt="保单预览" style="margin-bottom:12px;">
+              <textarea readonly>{{ uploadResult.raw_text }}</textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== 保单记录 ===================== -->
+      <div v-if="tab==='policies'">
+        <div class="filter-bar">
+          <label>部门：</label>
+          <select v-model="filterDeptId">
+            <option :value="0">全部</option>
+            <option v-for="d in departments" :key="d.id" :value="d.id">{{ d.name }}</option>
+          </select>
+          <label>用户：</label>
+          <select v-model="filterUserId">
+            <option :value="0">全部</option>
+            <option v-for="u in users" :key="u.id" :value="u.id">{{ u.username }}</option>
+          </select>
+          <label>添加时间：</label>
+          <input type="date" v-model="filterStartDate">
+          <span style="color:#999;">至</span>
+          <input type="date" v-model="filterEndDate">
+          <button @click="loadPolicies()">查询</button>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>添加时间</th>
+              <th>操作员</th>
+              <th>部门</th>
+              <th>保单号</th>
+              <th>车牌号</th>
+              <th>车型</th>
+              <th>保险公司</th>
+              <th>保费</th>
+              <th>新能源</th>
+              <th>质量分</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="p in policies" :key="p.id">
+              <td>{{ p.id }}</td>
+              <td>{{ formatDate(p.created_at) }}</td>
+              <td>{{ p.username || p.user_id }}</td>
+              <td>{{ p.department_name || '-' }}</td>
+              <td>{{ p.field?.policy_number || '-' }}</td>
+              <td>{{ p.field?.plate_number || '-' }}</td>
+              <td>{{ p.field?.vehicle_model || '-' }}</td>
+              <td>{{ p.field?.insurance_company || '-' }}</td>
+              <td>{{ p.field?.premium != null ? p.field.premium.toFixed(0) : '-' }}</td>
+              <td><span v-if="p.field" :class="p.field.is_new_energy ? 'tag tag-ev' : 'tag tag-fuel'">{{
+                  p.field.is_new_energy ? '新能源' : '燃油' }}</span></td>
+              <td><span :class="qualityTagClass(p.quality_score)">{{ p.quality_score }}</span></td>
+              <td>
+                <span class="tag tag-warn" v-if="p.quality_score < 60">待复核</span>
+                <span class="tag tag-corrected" v-else-if="p.status==='corrected'">已修正</span>
+                <span class="tag tag-good" v-else>已完成</span>
+              </td>
+              <td><button class="btn btn-sm btn-ghost" @click="openEdit(p.id, p.field, p.quality_score)">编辑</button>
+              </td>
+            </tr>
+            <tr v-if="!policies.length">
+              <td colspan="13" style="text-align:center;color:#aaa;padding:30px;">暂无数据，请先在「保单上传」中上传</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===================== 人工修正弹窗 ===================== -->
+    <div v-if="editing" class="modal-mask" @click.self="closeEdit()">
+      <div class="modal">
+        <h3>✏️ 人工修正识别结果（保单 #{{ editing.policyId }}）</h3>
+        <p class="hint">请核对以下字段，留空表示未识别到；保存后质量分将按字段完整率自动重算。</p>
+        <div class="form-grid">
+          <div class="form-item" v-for="f in fieldDefs" :key="f.key">
+            <label>{{ f.label }}</label>
+            <select v-if="f.key==='is_new_energy'" v-model="editForm.is_new_energy">
+              <option :value="false">燃油车</option>
+              <option :value="true">新能源</option>
+            </select>
+            <input v-else-if="f.type==='number'" type="number" step="0.01" v-model="editForm[f.key]">
+            <input v-else-if="f.type==='date'" type="date" v-model="editForm[f.key]">
+            <input v-else type="text" v-model="editForm[f.key]">
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" @click="closeEdit()">取消</button>
+          <button class="btn" @click="saveEdit()">💾 保存修正</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 全局操作反馈提示 -->
+    <div v-if="toast" class="toast" :class="'toast-' + toast.type">{{ toast.message }}</div>
+  </div>
+
+  <script>
+    const API = '/api';
+    const { createApp, ref, computed, onMounted, nextTick, watch } = Vue;
+
+    // 与后端 model.FIELD_NAMES 保持一致的口径
+    const FIELD_DEFS = [
+      { key: 'policy_number', label: '保单号', type: 'text' },
+      { key: 'plate_number', label: '车牌号', type: 'text' },
+      { key: 'owner_name', label: '被保险人', type: 'text' },
+      { key: 'insured_name', label: '投保人', type: 'text' },
+      { key: 'vehicle_model', label: '厂牌型号', type: 'text' },
+      { key: 'vehicle_brand', label: '品牌', type: 'text' },
+      { key: 'insurance_company', label: '保险公司', type: 'text' },
+      { key: 'premium', label: '保费(元)', type: 'number' },
+      { key: 'is_new_energy', label: '是否新能源', type: 'bool' },
+      { key: 'insurance_date', label: '投保日期', type: 'date' },
+      { key: 'coverage', label: '险种', type: 'text' },
+    ];
+
+    createApp({
+      setup() {
+        const tab = ref('dashboard');
+        const overview = ref({ total: 0, today_count: 0, avg_quality_score: 0, corrected_count: 0 });
+        const users = ref([]);
+        const departments = ref([]);
+        const policies = ref([]);
+        const timeDim = ref('day');
+        const reportDim = ref('week');
+        const live = ref(false);
+
+        const uploadUserId = ref(1);
+        const uploadResult = ref(null);
+        const uploading = ref(false);
+        const isDragover = ref(false);
+        const confirming = ref(false);
+        const confirmForm = ref({});
+
+        const filterDeptId = ref(0);
+        const filterUserId = ref(0);
+        const filterStartDate = ref('');
+        const filterEndDate = ref('');
+
+        const editing = ref(null);
+        const editForm = ref({});
+
+        const toast = ref(null);
+        let toastTimer = null;
+
+        const fieldDefs = FIELD_DEFS;
+        const currentOperator = computed(() => users.value.find(u => u.id === uploadUserId.value) || null);
+
+        let charts = {};
+        let es = null;
+
+        async function api(path) {
+          const r = await fetch(API + path);
+          return r.json();
+        }
+
+        // 统一的浮层提示：成功 / 失败 / 一般信息
+        function showToast(message, type = 'info', duration = 3200) {
+          toast.value = { message, type };
+          clearTimeout(toastTimer);
+          toastTimer = setTimeout(() => { toast.value = null; }, duration);
+        }
+
+        // 把表单值整理成接口需要的类型（空串转 null、保费转数字、新能源转布尔）
+        function buildPayload(form) {
+          const payload = {};
+          FIELD_DEFS.forEach(f => {
+            const v = form[f.key];
+            if (f.key === 'is_new_energy') {
+              payload[f.key] = (v === true || v === 'true');
+            } else if (f.type === 'number') {
+              payload[f.key] = (v === '' || v === null || v === undefined) ? null : Number(v);
+            } else {
+              payload[f.key] = (v === '' || v === null || v === undefined) ? null : v;
+            }
+          });
+          return payload;
+        }
+
+        function qualityTagClass(score) {
+          if (score >= 85) return 'tag tag-good';
+          if (score >= 60) return 'tag tag-warn';
+          return 'tag tag-bad';
+        }
+
+        function formatDate(s) {
+          if (!s) return '';
+          // 后端统一存本地时间且输出的就是本地时间字符串（形如 2026-10-06T19:25:10.490168），
+          // 直接截取展示即可；交给 new Date 解析反而会受浏览器时区影响而偏移。
+          return String(s).substring(0, 19).replace('T', ' ');
+        }
+
+        // ---------------- 图表 ----------------
+        function initCharts() {
+          ['chartTrend', 'chartCompany', 'chartEV', 'chartSegment', 'chartModel', 'chartUser', 'chartDept']
+            .forEach(id => {
+              const el = document.getElementById(id);
+              if (el && !charts[id]) charts[id] = echarts.init(el);
+            });
+        }
+
+        async function loadDashboard() {
+          initCharts();
+          overview.value = await api('/policies/stats/overview');
+
+          const [trend, company, evData, segment, model, user, dept] = await Promise.all([
+            api(`/reports/time_series?dimension=${timeDim.value}&days=14`),
+            api(`/reports/insurance_company?dimension=${reportDim.value}`),
+            api(`/reports/new_energy?dimension=${reportDim.value}`),
+            api(`/reports/premium_segment?dimension=${reportDim.value}`),
+            api(`/reports/vehicle_model?dimension=${reportDim.value}`),
+            api(`/reports/user_stats?dimension=week`),
+            api(`/reports/department_stats?dimension=week`),
+          ]);
+
+          charts.chartTrend.setOption({
+            tooltip: { trigger: 'axis' },
+            legend: { data: ['保单数', '总保费'] },
+            grid: { left: 50, right: 60, bottom: 40, top: 40 },
+            xAxis: { type: 'category', data: trend.map(t => t.period.substring(5)) },
+            yAxis: [
+              { type: 'value', name: '保单数' },
+              { type: 'value', name: '保费(元)', axisLabel: { formatter: v => (v / 1000) + 'k' } }
+            ],
+            series: [
+              { name: '保单数', type: 'bar', data: trend.map(t => t.count), itemStyle: { color: '#3a7bd5' } },
+              { name: '总保费', type: 'line', yAxisIndex: 1, smooth: true, data: trend.map(t => t.total_premium), itemStyle: { color: '#ff6b6b' } }
+            ]
+          });
+
+          charts.chartCompany.setOption({
+            tooltip: { trigger: 'item', formatter: '{b}: {c} 单 ({d}%)' },
+            legend: { orient: 'vertical', right: 10, top: 'center' },
+            series: [{
+              type: 'pie', radius: ['40%', '70%'], center: ['40%', '50%'],
+              data: company.map(c => ({ name: c.insurance_company, value: c.policy_count })),
+              label: { formatter: '{b}\n{d}%' }
+            }]
+          });
+
+          charts.chartEV.setOption({
+            tooltip: { trigger: 'item', formatter: '{b}: {c} 单 ({d}%)' },
+            color: ['#2ecc71', '#f39c12'],
+            series: [{
+              type: 'pie', radius: '65%',
+              data: evData.map(e => ({ name: e.label, value: e.policy_count })),
+              label: { formatter: '{b}\n{d}%' }
+            }]
+          });
+
+          charts.chartSegment.setOption({
+            tooltip: { trigger: 'axis' },
+            grid: { left: 60, right: 30, bottom: 40, top: 30 },
+            xAxis: { type: 'category', data: segment.map(s => s.segment) },
+            yAxis: { type: 'value' },
+            series: [{
+              type: 'bar', data: segment.map(s => s.policy_count),
+              itemStyle: {
+                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                  { offset: 0, color: '#3a7bd5' }, { offset: 1, color: '#00d2ff' }
+                ])
+              }
+            }]
+          });
+
+          const topModels = model.slice(0, 10).reverse();
+          charts.chartModel.setOption({
+            tooltip: { trigger: 'axis' },
+            grid: { left: 110, right: 30, bottom: 20, top: 20 },
+            xAxis: { type: 'value' },
+            yAxis: { type: 'category', data: topModels.map(m => m.vehicle_model) },
+            series: [{ type: 'bar', data: topModels.map(m => m.policy_count), itemStyle: { color: '#0f3460' } }]
+          });
+
+          const sortedUser = user.slice().sort((a, b) => b.upload_count - a.upload_count);
+          charts.chartUser.setOption({
+            tooltip: { trigger: 'axis' },
+            legend: { data: ['上传数', '质量分'] },
+            grid: { left: 50, right: 60, bottom: 30, top: 40 },
+            xAxis: { type: 'category', data: sortedUser.map(u => u.username) },
+            yAxis: [
+              { type: 'value', name: '上传数' },
+              { type: 'value', name: '质量分', min: 0, max: 100 }
+            ],
+            series: [
+              { name: '上传数', type: 'bar', data: sortedUser.map(u => u.upload_count), itemStyle: { color: '#3a7bd5' } },
+              { name: '质量分', type: 'line', yAxisIndex: 1, data: sortedUser.map(u => u.avg_quality), itemStyle: { color: '#ff6b6b' } }
+            ]
+          });
+
+          charts.chartDept.setOption({
+            tooltip: { trigger: 'axis' },
+            legend: { data: ['上传数', '活跃用户'] },
+            grid: { left: 60, right: 30, bottom: 40, top: 40 },
+            xAxis: { type: 'category', data: dept.map(d => d.department_name) },
+            yAxis: { type: 'value' },
+            series: [
+              { name: '上传数', type: 'bar', data: dept.map(d => d.upload_count), itemStyle: { color: '#0f3460' } },
+              { name: '活跃用户', type: 'bar', data: dept.map(d => d.active_users), itemStyle: { color: '#3a7bd5' } }
+            ]
+          });
+        }
+
+        async function loadUsers() {
+          const [u, d] = await Promise.all([api('/users'), api('/departments')]);
+          users.value = u;
+          departments.value = d;
+          if (u.length && !u.some(x => x.id === uploadUserId.value)) uploadUserId.value = u[0].id;
+        }
+
+        async function loadPolicies() {
+          let url = '/policies?';
+          if (filterUserId.value) url += `user_id=${filterUserId.value}&`;
+          if (filterDeptId.value) url += `department_id=${filterDeptId.value}&`;
+          if (filterStartDate.value) url += `start_date=${filterStartDate.value}&`;
+          if (filterEndDate.value) url += `end_date=${filterEndDate.value}&`;
+          policies.value = await api(url);
+        }
+
+        // ---------------- 上传 ----------------
+        async function onFileChange(e) {
+          const f = e.target.files[0];
+          if (f) await uploadFile(f);
+          e.target.value = '';
+        }
+
+        async function onDrop(e) {
+          isDragover.value = false;
+          const f = e.dataTransfer.files[0];
+          if (f) await uploadFile(f);
+        }
+
+        async function uploadFile(file) {
+          uploading.value = true;
+          uploadResult.value = null;
+          confirmForm.value = {};
+          const fd = new FormData();
+          fd.append('user_id', uploadUserId.value);
+          fd.append('file', file);
+          try {
+            // 第一步：只识别不入库，结果暂存在服务端等用户确认
+            const r = await fetch(API + '/policies/preview', { method: 'POST', body: fd });
+            const data = await r.json();
+            if (!r.ok) {
+              showToast('识别失败：' + (data.detail || r.status), 'error');
+            } else {
+              uploadResult.value = data;
+              fillConfirmForm(data.fields);
+              showToast('识别完成，请核对后点击「确认添加」', 'info');
+            }
+          } catch (err) {
+            showToast('上传失败：' + err.message, 'error');
+          }
+          uploading.value = false;
+        }
+
+        // 用识别结果预填确认表单（缺的字段留空，由用户补录）
+        function fillConfirmForm(fields) {
+          const form = {};
+          FIELD_DEFS.forEach(f => {
+            const v = fields ? fields[f.key] : null;
+            form[f.key] = (v === null || v === undefined) ? '' : v;
+          });
+          confirmForm.value = form;
+        }
+
+        // 第二步：确认添加 —— 按用户修正后的字段正式入库
+        async function confirmAdd() {
+          if (!uploadResult.value || confirming.value) return;
+          confirming.value = true;
+          try {
+            const r = await fetch(API + '/policies/confirm', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                pending_token: uploadResult.value.pending_token,
+                user_id: uploadUserId.value,
+                fields: buildPayload(confirmForm.value)
+              })
+            });
+            const data = await r.json();
+            if (!r.ok) {
+              showToast('确认失败：' + (data.detail || r.status), 'error');
+              return;
+            }
+            showToast(`已添加到保单记录（#${data.id}，质量分 ${data.quality_score}）`, 'success');
+            uploadResult.value = null;
+            confirmForm.value = {};
+            refreshCurrentTab();  // 若正停留在记录/看板页，立即刷新
+          } catch (err) {
+            showToast('确认失败：' + err.message, 'error');
+          } finally {
+            confirming.value = false;
+          }
+        }
+
+        // 取消添加：丢弃本次识别结果与暂存文件，不产生记录
+        async function cancelAdd() {
+          const token = uploadResult.value?.pending_token;
+          uploadResult.value = null;
+          confirmForm.value = {};
+          if (!token) return;
+          try {
+            await fetch(`${API}/policies/preview/${token}`, { method: 'DELETE' });
+            showToast('已取消本次上传', 'info');
+          } catch (err) {
+            // 取消失败不影响用户继续操作，暂存由服务端过期机制兜底清理
+          }
+        }
+
+        // ---------------- 人工修正 ----------------
+        function openEdit(policyId, fields, quality) {
+          const form = {};
+          FIELD_DEFS.forEach(f => {
+            const v = fields ? fields[f.key] : null;
+            form[f.key] = (v === null || v === undefined) ? '' : v;
+          });
+          editForm.value = form;
+          editing.value = { policyId, quality };
+        }
+
+        function closeEdit() { editing.value = null; }
+
+        async function saveEdit() {
+          const id = editing.value.policyId;
+          try {
+            const r = await fetch(`${API}/policies/${id}/fields`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(buildPayload(editForm.value))
+            });
+            const data = await r.json();
+            if (!r.ok) {
+              showToast('保存失败：' + (data.detail || r.status), 'error');
+              return;
+            }
+            closeEdit();
+            showToast(`修正已保存，质量分更新为 ${data.quality_score}`, 'success');
+            refreshCurrentTab();  // 记录列表与看板同步刷新
+          } catch (err) {
+            showToast('保存失败：' + err.message, 'error');
+          }
+        }
+
+        // ---------------- 实时刷新 ----------------
+        function refreshCurrentTab() {
+          if (tab.value === 'dashboard') loadDashboard();
+          else if (tab.value === 'policies') loadPolicies();
+        }
+
+        function connectStream() {
+          es = new EventSource(API + '/stream');
+          es.addEventListener('ready', () => { live.value = true; });
+          es.onopen = () => { live.value = true; };
+          es.onmessage = () => { refreshCurrentTab(); };
+          es.onerror = () => { live.value = false; };
+        }
+
+        watch(tab, t => {
+          if (t === 'dashboard') nextTick(loadDashboard);
+          if (t === 'policies') loadPolicies();
+        });
+
+        onMounted(async () => {
+          await loadUsers();
+          nextTick(loadDashboard);
+          connectStream();
+          // SSE 断线时的兜底轮询：每 30 秒刷新当前页，保证看板与记录最终一致
+          setInterval(() => { if (!live.value) refreshCurrentTab(); }, 30000);
+          window.addEventListener('resize', () => Object.values(charts).forEach(c => c && c.resize()));
+        });
+
+        return {
+          tab, overview, users, departments, policies,
+          timeDim, reportDim, live, currentOperator,
+          uploadUserId, uploadResult, uploading, isDragover,
+          confirming, confirmForm, confirmAdd, cancelAdd,
+          filterDeptId, filterUserId, filterStartDate, filterEndDate,
+          editing, editForm, fieldDefs, toast,
+          loadDashboard, loadPolicies, onFileChange, onDrop,
+          openEdit, closeEdit, saveEdit,
+          qualityTagClass, formatDate
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+
+</html>

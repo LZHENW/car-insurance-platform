@@ -1,0 +1,38 @@
+[project]
+name = "car-insurance-platform"
+version = "1.0.0"
+description = "车险市场信息收集平台：保单图片关键字段识别 + 多维度报表监控"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.100",
+    "uvicorn[standard]>=0.20",
+    "python-multipart>=0.0.5",
+    "sqlalchemy>=2.0",
+    "pydantic>=2.0",
+    # PDF 解析：逐页转图片后识别
+    "pymupdf>=1.24",
+    # 真实 OCR 引擎（纯 CPU，模型随包自带）
+    # 注意：该包元数据声明 Python <3.13，但在 3.13/3.14 实测可用，需强制安装：
+    #   pip install --ignore-requires-python rapidocr-onnxruntime==1.2.3
+    "rapidocr-onnxruntime==1.2.3",
+]
+
+[project.optional-dependencies]
+# 可选：优先使用 PaddleOCR（Python 3.14 暂无官方 wheel）
+paddle = ["paddlepaddle", "paddleocr"]
+# 可选：切换到 MySQL / PostgreSQL 时按需安装
+mysql = ["pymysql"]
+postgres = ["psycopg2-binary"]
+dev = ["pytest>=8.0", "httpx>=0.27"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "-q"

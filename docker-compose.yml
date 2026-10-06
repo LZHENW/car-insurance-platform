@@ -1,0 +1,14 @@
+services:
+  app:
+    build: .
+    container_name: car-insurance-platform
+    ports:
+      - "8000:8000"
+    environment:
+      # 留空使用容器内 SQLite；接入外部数据库时改为连接串
+      DATABASE_URL: ""
+      MAX_UPLOAD_MB: "20"
+    volumes:
+      - ./data:/app/data
+      - ./uploads:/app/uploads
+    restart: unless-stopped
